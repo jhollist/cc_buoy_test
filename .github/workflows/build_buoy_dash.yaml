@@ -1,0 +1,61 @@
+name: cc-buoys
+
+on:
+  push:
+    branches: main
+
+jobs:
+  cc-buoys:
+    runs-on: windows-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      
+    steps:
+      - name: checkout repo    
+        uses: actions/checkout@v2
+
+      - name: setup R
+        uses: r-lib/actions/setup-r@v1
+        with:
+          use-public-rspm: true
+          r-version: '4.1.0'
+
+      - name: Install R packages
+        run: |
+          Rscript -e "install.packages('RCurl')"
+          Rscript -e "install.packages('stringr')"
+          Rscript -e "install.packages('here')"
+          Rscript -e "install.packages('lubridate')"
+          Rscript -e "install.packages('dplyr')"
+          Rscript -e "install.packages('readr')"
+          Rscript -e "install.packages('tidyr')"
+          Rscript -e "install.packages('purrr')"
+          Rscript -e "install.packages('ggplot2')"
+          Rscript -e "install.packages('hrbrthemes')"
+          Rscript -e "install.packages('plotly')"
+          
+          
+      - name: grab data
+        env:
+          NEWFTPU: ${{ secrets.SFTP_USER}}
+          NEWFTPP: ${{ secrets.SFTP_PASS}} 
+        run: |
+          Rscript -e "source('R/pull_buoy_data.R')"
+          Rscript -e "source('R/merge_buoy_data.R')"
+          
+      - name: merge data
+        run: |
+          Rscript -e "source('R/merge_buoy_data.R')"
+          
+      - name: create dashboard
+        run: |
+          Rscript -e "source('R/create_dashboard.R')"
+          
+      - name: Commit files
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add --all
+          git commit -am "add data"
+          git push 
