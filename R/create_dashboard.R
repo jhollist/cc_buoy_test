@@ -7,7 +7,7 @@ library(hrbrthemes)
 
 load(here("data/merged_buoy_data.rda"))
 
-dash_gg <- merged_buoy_data %>%
+merged_buoy_data_cleaned <- merged_buoy_data %>%
   filter(name %in% c("no3-", "temperature",
                      "ph", "odosat", "chlorophyll rfu", 
                      "bga-phycocyanin rfu","turbidity")) %>%
@@ -26,7 +26,9 @@ dash_gg <- merged_buoy_data %>%
                                   "Chlor.(RFU)", "Phyco(RFU)", 
                                   "Nitrate(mg/L)")),
          waterbody = factor(waterbody, labels = 
-                              c("Hamblin Pond", "Shubael Pond"))) %>%
+                              c("Hamblin Pond", "Shubael Pond")))
+
+dash_gg <- merged_buoy_data_cleaned %>%
   ggplot(aes(x=date_hour, y = value)) +
   facet_grid(name ~ waterbody, scales = "free") +
   geom_point(aes(color = waterbody)) + 
